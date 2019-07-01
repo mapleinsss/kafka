@@ -17,13 +17,13 @@ public class ProducerQuickStart {
 
     public static void main(String[] args) {
         Properties properties = new Properties();
-        properties.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer" );
-        properties.put("bootstrap.servers",BROKERLIST);
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("bootstrap.servers", BROKERLIST);
         // 配置生产者客户端参数并创建 KafkaProducer 实例
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
         // 构建所需要发送的消息
-        ProducerRecord<String,String> record = new ProducerRecord<>(TOPIC,"hello,Kafka!");
+        ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC, "hello,Kafka!");
         // 发送消息
         try {
             producer.send(record);

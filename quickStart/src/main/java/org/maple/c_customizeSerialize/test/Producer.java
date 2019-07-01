@@ -29,7 +29,7 @@ public class Producer {
         Properties properties = initConfig();
         KafkaProducer<String, Company> producer = new KafkaProducer<>(properties);
         Company company = Company.builder().name("maple.org").address("To the moon").build();
-        ProducerRecord<String,Company> record = new ProducerRecord<>(TOPIC, company);
+        ProducerRecord<String, Company> record = new ProducerRecord<>(TOPIC, company);
         try {
             producer.send(record).get();
         } catch (Exception e) {
