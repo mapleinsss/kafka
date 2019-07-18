@@ -1,22 +1,23 @@
 package org.maple.c_offset;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * @auther Mapleins
  * @date 2019-06-25 17:36
- * @Description 验证 lastConsumerOffset 、 committed offset、offsetAndMetadata 三者的关系
+ * @Description 模拟重复消费
  */
 @Slf4j
-public class KafkaConsumerOffset1 {
+public class KafkaConsumerOffset3 {
 
     private static final String BROKERLIST = "hadoop102:9092";
     private static final String TOPIC = "topic-demo";
@@ -41,22 +42,18 @@ public class KafkaConsumerOffset1 {
         TopicPartition topicPartition = new TopicPartition(TOPIC, 0);
         // 订阅主题
         consumer.assign(Arrays.asList(topicPartition));
-        // 当前消费到的位移
-        long lastConsumedOffset = -1;
         // 循环消费消息
         while (true) {
+            // 现在已经拉取到所有消息
             ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(1000));
-            if (consumerRecords.isEmpty()) {
-                break;
-            }
-            List<ConsumerRecord<String, String>> records = consumerRecords.records(topicPartition);
-            lastConsumedOffset = records.get(records.size() - 1).offset();
-            consumer.commitSync();// 同步提交消费位移
+            // 执行操作中...
+
+            // 进行位移提交
+
+            /**
+             * 如果在上面执行操作时，客户端突然宕机，未进行位移提交，那么当故障恢复后，又要从上次位移提交的位置开始消费，造成了重复消费。
+             */
         }
-        System.out.println("consumed offset is :" + lastConsumedOffset);
-        OffsetAndMetadata offsetAndMetadata = consumer.committed(topicPartition);
-        System.out.println("committed offset is :" + offsetAndMetadata.offset());
-        long position = consumer.position(topicPartition);
-        System.out.println("the offset of the next record is " + position);
+
     }
 }

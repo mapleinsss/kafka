@@ -1,8 +1,9 @@
-package org.maple.c_offset;
+package org.maple.e_seek;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -13,15 +14,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @auther Mapleins
  * @date 2019-06-25 17:36
- * @Description 验证 lastConsumerOffset 、 committed offset、offsetAndMetadata 三者的关系
+ * @Description seekToEnd() 从末尾开始消费
  */
 @Slf4j
-public class KafkaConsumerOffset1 {
+public class KafkaConsumerAnalysis3 {
 
     private static final String BROKERLIST = "hadoop102:9092";
     private static final String TOPIC = "topic-demo";
     private static final String GOURPID = "group.demo";
-
+    private static final AtomicBoolean ISRUNNING = new AtomicBoolean(true);
 
     private static Properties initConfig() {
         Properties properties = new Properties();
@@ -37,26 +38,28 @@ public class KafkaConsumerOffset1 {
         Properties properties = initConfig();
         // 创建一个消费客户端实例
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
-        // 消费分区为 0
-        TopicPartition topicPartition = new TopicPartition(TOPIC, 0);
         // 订阅主题
-        consumer.assign(Arrays.asList(topicPartition));
-        // 当前消费到的位移
-        long lastConsumedOffset = -1;
-        // 循环消费消息
-        while (true) {
-            ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(1000));
-            if (consumerRecords.isEmpty()) {
-                break;
-            }
-            List<ConsumerRecord<String, String>> records = consumerRecords.records(topicPartition);
-            lastConsumedOffset = records.get(records.size() - 1).offset();
-            consumer.commitSync();// 同步提交消费位移
+        consumer.subscribe(Collections.singletonList(TOPIC));
+
+        // 获取所有的主题
+        Set<TopicPartition> assignment = new HashSet<>();
+        while (assignment.size() == 0) { // 设置较短的获取时间，来确保不会耽误太多时间在获取分区主题上
+            consumer.poll(Duration.ofMillis(100));
+            assignment = consumer.assignment();
         }
-        System.out.println("consumed offset is :" + lastConsumedOffset);
-        OffsetAndMetadata offsetAndMetadata = consumer.committed(topicPartition);
-        System.out.println("committed offset is :" + offsetAndMetadata.offset());
-        long position = consumer.position(topicPartition);
-        System.out.println("the offset of the next record is " + position);
+        consumer.seekToEnd(assignment);
+
+        // 循环消费消息
+        try {
+            while (ISRUNNING.get()) {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+                records.forEach(x -> System.out.println("topic:" + x.topic() + "\t partition:" + x.partition() +
+                        "\t offset:" + x.offset() + "\t key:" + x.key() + "\t value:" + x.value()));
+            }
+        } catch (Exception e) {
+            log.error("occur exception ", e);
+        } finally {
+            consumer.close();
+        }
     }
 }
