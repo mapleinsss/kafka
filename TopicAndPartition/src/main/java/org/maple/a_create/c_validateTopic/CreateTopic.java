@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutionException;
 public class CreateTopic {
 
     public static final String BROKERLIST = "hadoop102:9092";
-    public static final String TOPIC = "topic-partitions1";
+    public static final String TOPIC = "topic-partitions-reassign";
 
     public static Properties initProp(){
         Properties properties = new Properties();
@@ -32,7 +32,7 @@ public class CreateTopic {
         Properties properties = initProp();
         AdminClient adminClient = AdminClient.create(properties);
 
-        NewTopic newTopic = new NewTopic(TOPIC, 3, (short) 4);
+        NewTopic newTopic = new NewTopic(TOPIC, 4, (short) 2);
 
         CreateTopicsResult topicsResult = adminClient.createTopics(Collections.singleton(newTopic));
         try {

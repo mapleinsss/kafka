@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 public class DescribeTopic {
 
     public static final String BROKERLIST = "hadoop102:9092";
-    public static final String TOPIC = "topic-admin";
+    public static final String TOPIC = "topic-partitions-reassign";
 
     public static Properties initProp(){
         Properties properties = new Properties();
