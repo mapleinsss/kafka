@@ -10,9 +10,9 @@ public class CreateTopic {
         String[] options = new String[]{
                 "--zookeeper","hadoop102:2181",
                 "--create",
-                "--topic","topic-datax",
-                "--partitions","4",
-                "--replication-factor","2"
+                "--topic","topic-log-2",
+                "--partitions","1",
+                "--replication-factor","1"
         };
         kafka.admin.TopicCommand.main(options);
     }
